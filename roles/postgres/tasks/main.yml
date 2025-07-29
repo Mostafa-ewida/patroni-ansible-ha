@@ -64,8 +64,8 @@
       patroni_super_user_pass: {{ patroni_super_user_pass }}
       patroni_repl_user_pass: {{ patroni_repl_user_pass }}
     dest: /tmp/patroni-credentials.yml
-    owner: postgres
-    group: postgres
+    owner: root
+    group: root
     mode: '0600'
   run_once: true
 
