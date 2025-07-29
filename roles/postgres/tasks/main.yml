@@ -67,7 +67,7 @@
     owner: root
     group: root
     mode: '0600'
-  when: patroni_super_user_pass is not defined or patroni_repl_user_pass is not defined
+  # when: patroni_super_user_pass is not defined or patroni_repl_user_pass is not defined
 
 
 
