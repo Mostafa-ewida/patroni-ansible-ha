@@ -48,19 +48,14 @@
     mode: '0700'
 
 
-- name: Configure Patroni
-  template:
-    src: patroni.yml.j2
-    dest: /etc/patroni.yml
-    owner: postgres
-    group: postgres
-    mode: '0644'
+
 
 - name: set random password for patroni users
   set_fact:
     patroni_super_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
     patroni_repl_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
   when: patroni_super_user_pass is not defined or patroni_repl_user_pass is not defined
+
 
 
 - name: Save Patroni credentials to file (run once)
@@ -89,6 +84,15 @@
     patroni_super_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_super_user_pass }}"
     patroni_repl_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_repl_user_pass }}"
 
+
+- name: Configure Patroni
+  template:
+    src: patroni.yml.j2
+    dest: /etc/patroni.yml
+    owner: postgres
+    group: postgres
+    mode: '0644'
+    
 - name: Configure Patroni service
   template:
     src: patroni.service.j2
