@@ -1,11 +1,15 @@
 ---
 # HAProxy specific variables
-
-main_haproxy_ip: 10.128.0.15
+# I want to set the main haproxy to one of the hosts in the haproxy group
+# This will be used to set the main haproxy in the keepalived configuration
+main_haproxy: "{{ groups['haproxy'][0] }}"
+haproxy_port: 80
 haproxy_postgres_port: 5000
 haproxy_stat_port: 7000
-virtual_ip: 10.128.0.100
+virtual_ip: 10.132.0.100
 
 keepalived_priority:
-  10.128.0.15: 101
+  # Set the priority for the main haproxy node to 101
+  # This will ensure that it is the master node for the VIP 
+  groups['haproxy'][0]: 101
   default: 100

@@ -14,12 +14,30 @@
       - jq
     state: present
 
-- name: Configure /etc/hosts
-  template:
-    src: hosts.j2
-    dest: /etc/hosts
-    owner: root
-    group: root
-    mode: '0644'
-  notify:
-    - Restart networking
+- name: Create hostnames dictionary
+  set_fact:
+    hostnames: >-
+      {{
+        dict(
+          groups['all'] | map('extract', hostvars)
+          | map(attribute='ansible_default_ipv4.address')
+          | zip(groups['all'])
+        )
+      }}
+
+- debug:
+    msg: "{{ hostvars[item].inventory_hostname }} - {{ hostvars[item].ansible_default_ipv4.address }}"
+  loop: "{{ groups['all'] }}"
+
+- name: Add all cluster hosts to /etc/hosts
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |
+      {% for hostname, ip in hostnames.items() %}
+      {{ ip }}  {{ hostname }}
+      {% endfor %}
+    marker: "# {mark} ANSIBLE MANAGED - CLUSTER HOSTS (DO NOT EDIT MANUALLY)"
+    state: present
+    insertafter: EOF
+  become: true
+  when: hostnames is defined

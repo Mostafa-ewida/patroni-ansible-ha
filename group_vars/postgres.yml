@@ -5,9 +5,7 @@ cluster_scope: postgres
 cluster_namespace: /db/
 patroni_data_dir: /dev/data/patroni
 patroni_super_user_name: postgres
-patroni_super_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
 patroni_repl_user_name: replicator
-patroni_repl_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
 
 postgres_packages:
   - postgresql-{{ pg_version }}
