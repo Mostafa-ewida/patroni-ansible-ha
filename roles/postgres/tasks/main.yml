@@ -76,7 +76,6 @@
   slurp:
     src: /tmp/patroni-credentials.yml
   register: patroni_creds_raw
-  delegate_to: "{{ groups['postgres'] }}"
   run_once: true
 
 - name: Set Patroni password facts
@@ -92,7 +91,7 @@
     owner: postgres
     group: postgres
     mode: '0644'
-    
+
 - name: Configure Patroni service
   template:
     src: patroni.service.j2
