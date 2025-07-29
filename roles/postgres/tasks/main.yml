@@ -73,7 +73,7 @@
     group: postgres
     mode: '0600'
   run_once: true
-  delegate_to: "{{ groups['postgres'][0] }}"
+  delegate_to: "{{ groups['postgres'] }}"
 
 
 
@@ -81,7 +81,7 @@
   slurp:
     src: /tmp/patroni-credentials.yml
   register: patroni_creds_raw
-  delegate_to: "{{ groups['postgres'][0] }}"
+  delegate_to: "{{ groups['postgres'] }}"
   run_once: true
 
 - name: Set Patroni password facts
