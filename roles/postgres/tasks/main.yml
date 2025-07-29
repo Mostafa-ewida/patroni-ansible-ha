@@ -1,0 +1,83 @@
+---
+- name: Add PostgreSQL repository key
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+
+- name: Add PostgreSQL repository
+  apt_repository:
+    repo: "deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main"
+    state: present
+    filename: pgdg.list
+
+- name: Install PostgreSQL packages
+  apt:
+    name: "{{ postgres_packages }}"
+    state: present
+    update_cache: yes
+
+- name: Install Python packages
+  pip:
+    name:
+      - patroni
+      - python-etcd
+      - psycopg2-binary
+    state: present
+
+- name: Stop PostgreSQL service
+  service:
+    name: postgresql
+    state: stopped
+    enabled: no
+
+- name: Create symlinks for PostgreSQL binaries (wildcard version)
+  command: ln -sf /usr/lib/postgresql/{{ pg_version }}/bin/* /usr/sbin/
+  warn: no  # Suppress warning about using command instead of file module
+
+- name: Create Patroni data directory
+  file:
+    path: "{{ patroni_data_dir }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0700'
+
+- name: Configure Patroni
+  template:
+    src: patroni.yml.j2
+    dest: /etc/patroni.yml
+    owner: postgres
+    group: postgres
+    mode: '0644'
+
+- name: Save generated passwords
+  copy:
+    content: |
+      patroni_super_user_pass: {{ patroni_super_user_pass }}
+      patroni_repl_user_pass: {{ patroni_repl_user_pass }}
+    dest: /etc/patroni/credentials.yml
+    owner: postgres
+    group: postgres
+    mode: 0600
+  when: inventory_hostname in groups['postgres']
+  run_once: true
+  delegate_to: "{{ groups['postgres'][0] }}"
+
+
+- name: Configure Patroni service
+  template:
+    src: patroni.service.j2
+    dest: /etc/systemd/system/patroni.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Enable and start Patroni
+  service:
+    name: patroni
+    state: started
+    enabled: yes

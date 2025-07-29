@@ -1,0 +1,37 @@
+global
+    log /dev/log local0
+    log /dev/log local1 notice
+    chroot /var/lib/haproxy
+    stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    stats timeout 30s
+    user haproxy
+    group haproxy
+    daemon
+    maxconn 2000
+
+defaults
+    log global
+    mode tcp
+    option tcplog
+    option dontlognull
+    timeout connect 5000
+    timeout client 50000
+    timeout server 50000
+
+listen stats
+    mode http
+    bind *:{{ haproxy_stat_port }}
+    stats enable
+    stats uri /
+    stats refresh 10s
+    stats admin if TRUE
+
+listen postgres
+    bind *:{{ haproxy_postgres_port }}
+    option httpchk
+    http-check expect status 200
+    balance roundrobin
+    default-server inter 3s fall 3 rise 2 on-marked-down shutdown-sessions
+{% for ip in groups['postgres'] %}
+    server {{ hostvars[ip].hostnames[hostvars[ip].ansible_default_ipv4.address] }} {{ hostvars[ip].ansible_default_ipv4.address }}:5432 maxconn 100 check port 8008
+{% endfor %}

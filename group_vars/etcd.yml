@@ -1,0 +1,4 @@
+--- 
+# etcd specific variables
+etcd_cluster_token: etcd-cluster-1
+etcd_data_dir: /var/lib/etcd

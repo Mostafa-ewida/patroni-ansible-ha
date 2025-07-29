@@ -1,0 +1,25 @@
+---
+- name: Update system packages
+  apt:
+    update_cache: yes
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Install common packages
+  apt:
+    name:
+      - wget
+      - curl
+      - gnupg2
+      - jq
+    state: present
+
+- name: Configure /etc/hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart networking

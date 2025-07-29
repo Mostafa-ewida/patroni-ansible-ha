@@ -1,0 +1,141 @@
+---
+- name: Updating , Configuring hosts file
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Include common role
+      include_role:
+        name: common
+
+
+
+
+- name: Configure etcd nodes
+  hosts: etcd
+  become: yes
+
+  tasks:
+    - name: Include etcd role
+      include_role:
+        name: etcd
+
+
+
+
+
+- name: Configure PostgreSQL nodes
+  hosts: postgres
+  become: yes
+
+  tasks:
+    - name: Include postgres role
+      include_role:
+        name: postgres
+
+
+
+
+
+- name: Configure HAProxy nodes
+  hosts: haproxy
+  become: yes
+
+  tasks:
+    - name: Include haproxy role
+      include_role:
+        name: haproxy
+
+
+
+        
+
+- name: Verify cluster setup
+  hosts: cluster
+  become: yes
+
+  tasks:
+    - name: Wait for services to stabilize
+      pause:
+        minutes: 1
+
+    - name: Check etcd status (on etcd nodes)
+      block:
+        - name: Get etcd health
+          command: ETCDCTL_API=3 etcdctl --endpoints=http://{{ ansible_default_ipv4.address }}:2379 endpoint health
+          register: etcd_health
+          changed_when: false
+
+        - name: Display etcd health
+          debug:
+            var: etcd_health.stdout_lines
+
+        - name: Get etcd member list
+          command: ETCDCTL_API=3 etcdctl --endpoints=http://{{ ansible_default_ipv4.address }}:2379 member list
+          register: etcd_members
+          changed_when: false
+
+        - name: Display etcd members
+          debug:
+            var: etcd_members.stdout_lines
+      when: "'etcd' in group_names"
+
+
+
+
+
+    - name: Check HAProxy status (on haproxy nodes)
+      block:
+        - name: Check HAProxy stats page
+          uri:
+            url: http://localhost:{{ haproxy_stat_port }}
+            return_content: yes
+          register: haproxy_status
+          changed_when: false
+
+        - name: Display HAProxy status
+          debug:
+            var: haproxy_status.status
+
+        - name: Check for VIP
+          command: ip a show {{ vip_interface }}
+          register: vip_check
+          changed_when: false
+
+        - name: Display VIP status
+          debug:
+            msg: "{{ 'VIP is assigned' if virtual_ip in vip_check.stdout else 'VIP not assigned (may be normal for backup node)' }}"
+      when: "'haproxy' in group_names"
+
+
+
+
+
+    - name: Check Patroni status (on postgres nodes)
+      block:
+        - name: Get Patroni service status
+          systemd:
+            name: patroni
+          register: patroni_status
+
+        - name: Display Patroni status
+          debug:
+            var: patroni_status
+
+        - name: Check PostgreSQL API
+          uri:
+            url: http://{{ ansible_default_ipv4.address }}:8008
+            return_content: yes
+          register: patroni_api
+          changed_when: false
+
+        - name: Display PostgreSQL state
+          debug:
+            msg: "PostgreSQL Reachable: {{ (patroni_api.content | from_json).state }}"
+
+
+        - name: check you credentials in /etc/patroni/credentials.yml
+          debug:
+            msg: "Ensure you have the correct credentials in /etc/patroni/credentials.yml for Patroni API access."
+          when: "'postgres' in group_names"

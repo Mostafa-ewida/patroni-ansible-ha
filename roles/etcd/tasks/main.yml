@@ -1,0 +1,23 @@
+---
+- name: Install etcd
+  apt:
+    name: etcd
+    state: present
+
+- name: Create etcd data directory
+  file:
+    path: "{{ etcd_data_dir }}"
+    state: directory
+    owner: etcd
+    group: etcd
+    mode: '0755'
+
+- name: Configure etcd
+  template:
+    src: etcd_default.j2
+    dest: /etc/default/etcd
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart etcd
