@@ -41,10 +41,10 @@ postgresql:
   authentication:
     replication:
       username: {{ patroni_repl_user_name }}
-      password: {{ patroni_repl_user_pass }}
+      password: "{{ patroni_repl_user_pass }}"
     superuser:
       username: {{ patroni_super_user_name }}
-      password: {{ patroni_super_user_pass }}
+      password: "{{ patroni_super_user_pass }}"
       parameters:
         unix_socket_directories: '.'
 tags:
