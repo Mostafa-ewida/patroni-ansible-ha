@@ -45,8 +45,8 @@ postgresql:
     superuser:
       username: {{ patroni_super_user_name }}
       password: "{{ patroni_super_user_pass }}"
-      parameters:
-        unix_socket_directories: '.'
+    parameters:
+      unix_socket_directories: '.'
 tags:
   nofailover: false
   noloadbalance: false
