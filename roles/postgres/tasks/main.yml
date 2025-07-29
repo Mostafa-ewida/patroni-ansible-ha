@@ -68,7 +68,6 @@
     group: postgres
     mode: '0600'
   run_once: true
-  delegate_to: "{{ groups['postgres'] }}"
 
 
 
@@ -91,7 +90,7 @@
     owner: postgres
     group: postgres
     mode: '0644'
-
+    
 - name: Configure Patroni service
   template:
     src: patroni.service.j2
