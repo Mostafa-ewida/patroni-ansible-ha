@@ -96,6 +96,24 @@
       when: haproxy_status is defined and inventory_hostname in groups['haproxy']
 
 
+    - name: Check for Keepalive VIP assignment
+      command: ip addr show
+      register: vip_check
+      changed_when: false
+      ignore_errors: true
+
+    - name: Display Keepalive VIP status
+      debug:
+        msg: >-
+          {% if (virtual_ip  in vip_check.stdout | default('')) %}
+            VIP {{ virtual_ip }} is assigned to {{ inventory_hostname }}
+          {% else %}
+            VIP {{ virtual_ip | default('not set') }} is NOT assigned to {{ inventory_hostname }}
+          {% endif %}
+      when: vip_check is defined and inventory_hostname in groups['haproxy']
+
+
+
 
 
     - name: Get Patroni service status
