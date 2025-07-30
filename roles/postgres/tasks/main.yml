@@ -51,7 +51,7 @@
 
 
 - name: Save Patroni credentials to file (run once)
-  copy:
+  file:
     content: |
       patroni_super_user_pass: {{ patroni_super_user_pass }}
       patroni_repl_user_pass: {{ patroni_repl_user_pass }}
@@ -59,9 +59,7 @@
     owner: root
     group: root
     mode: '0600'
-    delegate_to: localhost
-  # when: patroni_super_user_pass is not defined or patroni_repl_user_pass is not defined
-
+    deligate_to: localhost
 
 
 - name: Read Patroni credentials file
