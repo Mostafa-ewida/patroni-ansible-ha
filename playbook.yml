@@ -60,8 +60,7 @@
         seconds: 10
 
     - name: Check etcd health
-      get_url:
-        url: http://{{ ansible_default_ipv4.address }}:2379/health
+      command: curl http://{{ ansible_default_ipv4.address }}:2379/health
       register: etcd_health
       changed_when: false
       ignore_errors: true

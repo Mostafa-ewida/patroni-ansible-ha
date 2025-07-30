@@ -25,9 +25,7 @@
         )
       }}
 
-- debug:
-    msg: "{{ hostvars[item].inventory_hostname }} - {{ hostvars[item].ansible_default_ipv4.address }}"
-  loop: "{{ groups['all'] }}"
+
 
 - name: Add all cluster hosts to /etc/hosts
   ansible.builtin.blockinfile:

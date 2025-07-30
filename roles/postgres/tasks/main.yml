@@ -74,11 +74,6 @@
     patroni_super_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_super_user_pass }}"
     patroni_repl_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_repl_user_pass }}"
 
-- name: Display credentials file 
-  debug:
-    msg: "Patroni Super User Password: {{ patroni_super_user_pass }}, Patroni Replication User Password: {{ patroni_repl_user_pass }}"
-  when: patroni_super_user_pass is defined and patroni_repl_user_pass is defined
-    
 
 
 - name: Configure Patroni
