@@ -131,7 +131,7 @@
 
     - name: Display PostgreSQL state
       debug:
-        msg: "{{ patroni_list.content }}"
+        msg: "{{ patroni_list.stdout_lines if patroni_list is defined else 'No Patroni list available' }}"
       when: patroni_list is defined
 
     - name: Check your credentials in /etc/patroni/credentials.yml
