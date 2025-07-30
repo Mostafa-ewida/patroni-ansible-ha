@@ -39,7 +39,7 @@ postgresql:
    pgpass: /tmp/pgpass
    authentication:
     replication:
-      username: {{ patroni_repl_user_name }} 
+      username: replicator
       password: {{ patroni_repl_user_pass }}
     superuser:
       username: {{ patroni_super_user_name }}

@@ -5,7 +5,6 @@ cluster_scope: postgres
 cluster_namespace: /db/
 patroni_data_dir: /dev/data/patroni
 patroni_super_user_name: postgres
-patroni_repl_user_name: replicator
 
 postgres_packages:
   - postgresql-{{ pg_version }}

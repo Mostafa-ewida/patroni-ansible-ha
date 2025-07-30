@@ -84,7 +84,7 @@
       when: etcd_members is defined and inventory_hostname in groups['etcd']
 
     - name: Check HAProxy stats page
-      command: curl -I http://{{ ansible_default_ipv4.address }}:{{ haproxy_stats_port }} 
+      command: curl -I http://{{ ansible_default_ipv4.address }}:{{ haproxy_stat_port }} 
       register: haproxy_status
       changed_when: false
       ignore_errors: true
