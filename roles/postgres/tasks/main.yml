@@ -100,8 +100,22 @@
   systemd:
     daemon_reload: yes
 
-- name: Enable and start Patroni
+- name: Enable and start Patroni on the first node (bootstrap node)
   service:
     name: patroni
     state: started
     enabled: yes
+  when: inventory_hostname == groups['postgres'][0]
+
+- name: Wait for Patroni to finish bootstrapping
+  pause:
+    seconds: 30
+  when: inventory_hostname == groups['postgres'][0]
+
+- name: Enable and start Patroni on the other nodes
+  service:
+    name: patroni
+    state: started
+    enabled: yes
+  when: inventory_hostname != groups['postgres'][0]
+
