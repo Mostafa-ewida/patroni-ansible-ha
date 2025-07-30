@@ -31,21 +31,13 @@
     enabled: no
 
 - name: Create symlinks for PostgreSQL binaries (wildcard version)
-  command: ln -s /usr/lib/postgresql/{{ pg_version }}/bin/* /usr/bin/
-  ignore_errors: true
-  no_log: true
-  args:
-    warn: false
-  
-
-
-- name: Create Patroni data directory
-  file:
-    path: "{{ patroni_data_dir }}"
-    state: directory
-    owner: postgres
-    group: postgres
-    mode: '0700'
+  become: yes
+  shell: |
+    sudo ln -s /usr/lib/postgresql/{{ pg_version }}/bin/* /usr/bin/
+    sudo mkdir -p {{ patroni_data_dir }} 
+    sudo chown postgres:postgres {{ patroni_data_dir }}
+    sudo chmod 700 {{ patroni_data_dir }}
+    
 
 
 

@@ -59,6 +59,18 @@
       pause:
         seconds: 10
 
+    - name: Check etcd health
+      shell: |
+       curl http://{{ ansible_default_ipv4.address }}:2379/health
+      register: etcd_health
+      changed_when: false
+      ignore_errors: true
+      when: "'etcd' in group_names"
+
+    - name: Display etcd health
+      debug:
+        var: etcd_health.stdout_lines
+      when: etcd_health is defined
       
     - name: Get etcd member list
       command: etcdctl --endpoints=http://{{ ansible_default_ipv4.address }}:2379 member list
@@ -74,11 +86,12 @@
 
     - name: Check HAProxy stats page
       uri:
-        url: http://localhost:{{ haproxy_stat_port }}
+        url: http://localhost:{{ haproxy_stat_port | default('8404') }}
         return_content: yes
       register: haproxy_status
       changed_when: false
       ignore_errors: true
+      when: "'haproxy' in group_names"
 
     - name: Display HAProxy status
       debug:
@@ -90,7 +103,7 @@
       register: vip_check
       changed_when: false
       ignore_errors: true
-      when: haproxy_status is defined 
+      when: "'haproxy' in group_names"
 
     - name: Display VIP status
       debug:
@@ -102,7 +115,7 @@
         name: patroni
       register: patroni_status
       ignore_errors: true
-      when: group:names | intersect(['postgres']) | length > 0
+      when: "'postgres' in group_names"
 
     - name: Display Patroni service state
       debug:
