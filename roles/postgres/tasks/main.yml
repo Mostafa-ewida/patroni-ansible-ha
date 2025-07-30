@@ -31,7 +31,7 @@
     enabled: no
 
 - name: Create symlinks for PostgreSQL binaries (wildcard version)
-  command: ln -s /usr/lib/postgresql/*/bin/* /usr/bin/
+  command: ln -s /usr/lib/postgresql/{{ pg_version }}/bin/* /usr/bin/
   ignore_errors: true
   no_log: true
   args:
