@@ -4,12 +4,11 @@ name: {{ hostnames[ansible_default_ipv4.address] }}
 restapi:
   listen: {{ ansible_default_ipv4.address }}:8008
   connect_address: {{ ansible_default_ipv4.address }}:8008
-etcd:
+etcd:   
   hosts: 
 {% for ip in groups['etcd'] %}
     - {{ hostvars[ip].ansible_default_ipv4.address }}:2379
 {% endfor %}
-
 bootstrap:
   dcs:
     ttl: 30
@@ -17,38 +16,38 @@ bootstrap:
     retry_timeout: 10
     maximum_lag_on_failover: 1048576
     postgresql:
-      use_pg_rewind: true
+    use_pg_rewind: true
   initdb:
     - encoding: UTF8
     - data-checksums
   pg_hba:
-    - host replication replicator 127.0.0.1/32 md5
+    - host replication replicator   127.0.0.1/32 md5
 {% for ip in groups['postgres'] %}
     - host replication replicator {{ hostvars[ip].ansible_default_ipv4.address }}/0 md5
 {% endfor %}
-    - host all all 0.0.0.0/0 md5
+    - host all all   0.0.0.0/0   md5
   users:
     admin:
-      password: admin
-      options:
-        - createrole
-        - createdb
+       password: admin
+       options:
+       - createrole
+       - createdb
 postgresql:
-  listen: {{ ansible_default_ipv4.address }}:5432
-  connect_address: {{ ansible_default_ipv4.address }}:5432
-  data_dir: {{ patroni_data_dir }}
-  pgpass: /tmp/pgpass
-  authentication:
+   listen: {{ ansible_default_ipv4.address }}:5432
+   connect_address: {{ ansible_default_ipv4.address }}:5432
+   data_dir: {{ patroni_data_dir }}
+   pgpass: /tmp/pgpass
+   authentication:
     replication:
-      username: {{ patroni_repl_user_name }}
-      password: "{{ patroni_repl_user_pass }}"
+      username: {{ patroni_repl_user_name }} 
+      password: {{ patroni_repl_user_pass }}
     superuser:
       username: {{ patroni_super_user_name }}
-      password: "{{ patroni_super_user_pass }}"
-    parameters:
-      unix_socket_directories: '.'
+      password: {{ patroni_super_user_pass }}
+      parameters:
+        unix_socket_directories: '.'
 tags:
-  nofailover: false
-  noloadbalance: false
-  clonefrom: false
-  nosync: false
+   nofailover: false
+   noloadbalance: false
+   clonefrom: false
+   nosync: false
