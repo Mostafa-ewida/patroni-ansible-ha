@@ -17,6 +17,19 @@ This repository provides Ansible playbooks and roles to automate the deployment 
 - `roles/haproxy`: HAProxy setup for load balancing
 - `playbook.yml`: Main playbook to orchestrate the cluster deployment
 
+## Prerequisites
+Before running the playbook, ensure you have the following:
+
+1. Ubuntu servers (22.04 recommended) for all cluster nodes
+
+2. Ansible (2.9+) installed on your control machine
+
+3. Network connectivity between all nodes
+
+4. SSH access configured from the Ansible control node to all target nodes with sudo privileges
+
+5. Python 3 installed on all nodes
+
 ## Usage
 
 1. **clone the reposatory on the ansible host**  
