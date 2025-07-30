@@ -23,17 +23,21 @@ This repository provides Ansible playbooks and roles to automate the deployment 
    ```sh
    git clone https://github.com/Mostafa-ewida/patroni-ansible-ha.git
    ```
+   ```sh
+    cd patroni-ansible-ha
+   ```
 2. **Prepare your inventory file**  
    Define your hosts under `[etcd]`, `[postgres]`, and `[haproxy]` groups.
 
 3. **Customize variables**  
    Edit group_vars  as needed for your environment.
 
-4. **Run the playbook**  
+4. **Run the playbook**
+
    ```sh
    ansible-playbook -i inventory.ini playbook.yml
    ```
-5. **Get Postgres Credentials**  
+6. **Get Postgres Credentials**  
     The script randomly generates two passwords one for the super user and one for the replication user
     you can find the Credentials in a yaml file `/tmp/patroni-credentials.yml` on the  `ansible host`
 
