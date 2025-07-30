@@ -123,8 +123,7 @@
       when: patroni_status is defined
 
     - name: Check Patronictl list
-      shell: |
-          patronictl -c /etc/patroni.yml list
+      command: patronictl -c /etc/patroni.yml list
       return_content: yes
       register: patroni_list
       changed_when: false
