@@ -92,7 +92,7 @@
 
     - name: Display HAProxy status
       debug:
-        var: haproxy_status
+        var: haproxy_status.stdout_lines
       when: haproxy_status is defined and inventory_hostname in groups['haproxy']
 
 
@@ -125,5 +125,5 @@
 
     - name: Check your credentials in /etc/patroni/credentials.yml
       debug:
-        msg: "Ensure you have the correct credentials in /tmp/patroni-credentials.yml for Patroni API access."
+        msg: "Ensure you will find postgres credentials  in your ansible host's /tmp/patroni-credentials.yml for Patroni API access."
       when: inventory_hostname in groups['postgres'] [0]
