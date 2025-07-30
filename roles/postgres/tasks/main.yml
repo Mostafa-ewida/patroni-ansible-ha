@@ -30,22 +30,60 @@
     state: stopped
     enabled: no
 
-- name: Create symlinks for PostgreSQL binaries (wildcard version)
-  command: ln -s /usr/lib/postgresql/*/bin/* /usr/bin/
-  ignore_errors: true
+- name: Create PostgreSQL data directory and set permissions  
+  become: yes
+  shell: |
+     ln -s /usr/lib/postgresql/{{ pg_version }}/bin/* /usr/bin/ > /dev/null 2>&1 || true
+     mkdir -p {{ patroni_data_dir }} >  /dev/null 2>&1 || true
+     chown postgres:postgres {{ patroni_data_dir }}
+     chmod 700 {{ patroni_data_dir }}
+    
+
+
+
+
+- name: Check if Patroni credentials file exists (run once)
+  stat:
+    path: /tmp/patroni-credentials.yml
+  register: patroni_creds_file
+  delegate_to: localhost
+  run_once: true
+
+- name: Read Patroni credentials file
+  slurp:
+    src: /tmp/patroni-credentials.yml
+  register: patroni_creds_raw
+  delegate_to: localhost
+  run_once: true
+  when: patroni_creds_file.stat.exists
+
+- name: Set Patroni password facts from file
+  set_fact:
+    patroni_super_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_super_user_pass }}"
+    patroni_repl_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_repl_user_pass }}"
   no_log: true
-  args:
-    warn: false
-  
+  when: patroni_creds_file.stat.exists
 
+- name: Generate Patroni passwords and save to file (run once)
+  set_fact:
+    patroni_super_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits') }}"
+    patroni_repl_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits') }}"
+  no_log: true
+  when: not patroni_creds_file.stat.exists
+  run_once: true
 
-- name: Create Patroni data directory
-  file:
-    path: "{{ patroni_data_dir }}"
-    state: directory
-    owner: postgres
-    group: postgres
-    mode: '0700'
+- name: Save Patroni credentials to file (run once)
+  copy:
+    content: |
+      patroni_super_user_pass: {{ patroni_super_user_pass }}
+      patroni_repl_user_pass: {{ patroni_repl_user_pass }}
+    dest: /tmp/patroni-credentials.yml
+    owner: root
+    group: root
+    mode: '0600'
+  delegate_to: localhost
+  when: not patroni_creds_file.stat.exists
+  run_once: true
 
 
 - name: Configure Patroni
@@ -55,40 +93,7 @@
     owner: postgres
     group: postgres
     mode: '0644'
-
-- name: set random password for patroni users
-  set_fact:
-    patroni_super_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
-    patroni_repl_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
-  when: patroni_super_user_pass is not defined or patroni_repl_user_pass is not defined
-
-
-- name: Save Patroni credentials to file (run once)
-  copy:
-    content: |
-      patroni_super_user_pass: {{ patroni_super_user_pass }}
-      patroni_repl_user_pass: {{ patroni_repl_user_pass }}
-    dest: /tmp/patroni-credentials.yml
-    owner: postgres
-    group: postgres
-    mode: '0600'
-  run_once: true
-  delegate_to: "{{ groups['postgres'][0] }}"
-
-
-
-- name: Read Patroni credentials file
-  slurp:
-    src: /tmp/patroni-credentials.yml
-  register: patroni_creds_raw
-  delegate_to: "{{ groups['postgres'][0] }}"
-  run_once: true
-
-- name: Set Patroni password facts
-  set_fact:
-    patroni_super_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_super_user_pass }}"
-    patroni_repl_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_repl_user_pass }}"
-
+    
 - name: Configure Patroni service
   template:
     src: patroni.service.j2
@@ -101,8 +106,22 @@
   systemd:
     daemon_reload: yes
 
-- name: Enable and start Patroni
+- name: Enable and start Patroni on the first node (bootstrap node)
   service:
     name: patroni
     state: started
     enabled: yes
+  when: inventory_hostname == groups['postgres'][0]
+
+- name: Wait for Patroni to finish bootstrapping
+  pause:
+    seconds: 30
+  when: inventory_hostname == groups['postgres'][0]
+
+- name: Enable and start Patroni on the other nodes
+  service:
+    name: patroni
+    state: started
+    enabled: yes
+  when: inventory_hostname != groups['postgres'][0]
+

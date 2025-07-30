@@ -60,8 +60,7 @@
         seconds: 10
 
     - name: Check etcd health
-      shell: |
-       etcdctl --endpoints=http://{{ ansible_default_ipv4.address }}:2379 endpoint health
+      command: curl http://{{ ansible_default_ipv4.address }}:2379/health
       register: etcd_health
       changed_when: false
       ignore_errors: true
@@ -70,72 +69,61 @@
     - name: Display etcd health
       debug:
         var: etcd_health.stdout_lines
-      when: etcd_health is defined
+      when: etcd_health is defined  and inventory_hostname in groups['etcd']
       
     - name: Get etcd member list
       command: etcdctl --endpoints=http://{{ ansible_default_ipv4.address }}:2379 member list
       register: etcd_members
-      when: "'etcd' in group_names"
+      when:  inventory_hostname in groups['etcd']
       changed_when: false
       ignore_errors: true
 
     - name: Display etcd members
       debug:
         var: etcd_members.stdout_lines
-      when: etcd_members is defined
+      when: etcd_members is defined and inventory_hostname in groups['etcd']
 
     - name: Check HAProxy stats page
-      uri:
-        url: http://localhost:{{ haproxy_stat_port | default('8404') }}
-        return_content: yes
+      command: curl -I http://{{ ansible_default_ipv4.address }}:{{ haproxy_stat_port }} 
       register: haproxy_status
       changed_when: false
       ignore_errors: true
-      when: "'haproxy' in group_names"
+      when:  inventory_hostname in groups['haproxy']
 
     - name: Display HAProxy status
       debug:
-        var: haproxy_status.status
-      when: haproxy_status is defined
+        var: haproxy_status
+      when: haproxy_status is defined and inventory_hostname in groups['haproxy']
 
-    - name: Check for VIP
-      command: ip a show {{ vip_interface | default('eth0') }}
-      register: vip_check
-      changed_when: false
-      ignore_errors: true
-      when: "'haproxy' in group_names"
 
-    - name: Display VIP status
-      debug:
-        msg: "{{ 'VIP is assigned' if (virtual_ip | default('') in vip_check.stdout | default('')) else 'VIP not assigned (may be normal for backup node)' }}"
-      when: vip_check is defined
+
 
     - name: Get Patroni service status
       systemd:
         name: patroni
       register: patroni_status
       ignore_errors: true
-      when: "'postgres' in group_names"
+      when: inventory_hostname in groups['postgres']
 
     - name: Display Patroni service state
       debug:
         msg: "Patroni active: {{ patroni_status.status.ActiveState }}"
-      when: patroni_status is defined
+      when: inventory_hostname in groups['postgres']
 
-    - name: Check PostgreSQL API
-      uri:
-        url: http://{{ ansible_default_ipv4.address }}:8008
-        return_content: yes
-      register: patroni_api
+
+    - name: Check Patronictl list
+      command: patronictl -c /etc/patroni.yml list
+      register: patroni_list
       changed_when: false
       ignore_errors: true
-      when: "'postgres' in group_names"
+      when: inventory_hostname in groups['postgres']
 
     - name: Display PostgreSQL state
       debug:
-        msg: "PostgreSQL Reachable: {{ (patroni_api.content | from_json).state }}"
-      when: patroni_api is defined
+        msg: "{{ patroni_list.stdout_lines if patroni_list is defined else 'No Patroni list available' }}"
+      when: inventory_hostname in groups['postgres'] [0]
 
     - name: Check your credentials in /etc/patroni/credentials.yml
       debug:
         msg: "Ensure you have the correct credentials in /tmp/patroni-credentials.yml for Patroni API access."
+      when: inventory_hostname in groups['postgres'] [0]
