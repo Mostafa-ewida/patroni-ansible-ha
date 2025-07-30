@@ -92,7 +92,7 @@
 
     - name: Display HAProxy status
       debug:
-        var: haproxy_status.status
+        var: haproxy_status
       when: haproxy_status is defined and inventory_hostname in groups['haproxy']
 
 
