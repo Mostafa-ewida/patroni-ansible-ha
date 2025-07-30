@@ -60,8 +60,8 @@
         seconds: 10
 
     - name: Check etcd health
-      shell: |
-       curl http://{{ ansible_default_ipv4.address }}:2379/health
+      get_url:
+        url: http://{{ ansible_default_ipv4.address }}:2379/health
       register: etcd_health
       changed_when: false
       ignore_errors: true
@@ -131,7 +131,7 @@
 
     - name: Display PostgreSQL state
       debug:
-        msg: "{{ patroni_api.content }}"
+        msg: "{{ patroni_list.content }}"
       when: patroni_list is defined
 
     - name: Check your credentials in /etc/patroni/credentials.yml
