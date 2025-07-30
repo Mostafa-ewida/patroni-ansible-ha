@@ -88,7 +88,7 @@
       register: haproxy_status
       changed_when: false
       ignore_errors: true
-      when: and inventory_hostname in groups['haproxy']
+      when:  inventory_hostname in groups['haproxy']
 
     - name: Display HAProxy status
       debug:
