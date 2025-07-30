@@ -48,6 +48,7 @@
     patroni_super_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
     patroni_repl_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
   when: patroni_super_user_pass is not defined or patroni_repl_user_pass is not defined
+  run_once: true
 
 
 
@@ -67,13 +68,16 @@
     src: /tmp/patroni-credentials.yml
   register: patroni_creds_raw
   delegate_to: localhost
+  run_once: true
+  when: patroni_creds_raw is not defined or patroni_creds_raw.content is not defined
   
 
 - name: Set Patroni password facts
   set_fact:
     patroni_super_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_super_user_pass }}"
     patroni_repl_user_pass: "{{ (patroni_creds_raw.content | b64decode | from_yaml).patroni_repl_user_pass }}"
-
+  no_log: true
+  when: patroni_creds_raw is defined and patroni_creds_raw.content is defined
 
 
 - name: Configure Patroni

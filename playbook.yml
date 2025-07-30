@@ -69,19 +69,19 @@
     - name: Display etcd health
       debug:
         var: etcd_health.stdout_lines
-      when: etcd_health is defined
+      when: etcd_health is defined  and inventory_hostname in groups['etcd']
       
     - name: Get etcd member list
       command: etcdctl --endpoints=http://{{ ansible_default_ipv4.address }}:2379 member list
       register: etcd_members
-      when: "'etcd' in group_names"
+      when:  inventory_hostname in groups['etcd']
       changed_when: false
       ignore_errors: true
 
     - name: Display etcd members
       debug:
         var: etcd_members.stdout_lines
-      when: etcd_members is defined
+      when: etcd_members is defined and inventory_hostname in groups['etcd']
 
     - name: Check HAProxy stats page
       uri:
@@ -90,12 +90,14 @@
       register: haproxy_status
       changed_when: false
       ignore_errors: true
-      when: "'haproxy' in group_names"
+      when: and inventory_hostname in groups['haproxy']
 
     - name: Display HAProxy status
       debug:
         var: haproxy_status.status
-      when: haproxy_status is defined
+      when: haproxy_status is defined and inventory_hostname in groups['haproxy']
+
+
 
 
     - name: Get Patroni service status
@@ -126,3 +128,4 @@
     - name: Check your credentials in /etc/patroni/credentials.yml
       debug:
         msg: "Ensure you have the correct credentials in /tmp/patroni-credentials.yml for Patroni API access."
+      when: inventory_hostname in groups['postgres'] [0]
