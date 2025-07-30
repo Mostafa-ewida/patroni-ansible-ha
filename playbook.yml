@@ -124,7 +124,6 @@
 
     - name: Check Patronictl list
       command: patronictl -c /etc/patroni.yml list
-      return_content: yes
       register: patroni_list
       changed_when: false
       ignore_errors: true
