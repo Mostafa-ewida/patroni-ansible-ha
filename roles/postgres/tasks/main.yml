@@ -65,7 +65,8 @@
   slurp:
     src: /tmp/patroni-credentials.yml
   register: patroni_creds_raw
-  run_once: true
+  delegate_to: localhost
+  
 
 - name: Set Patroni password facts
   set_fact:
