@@ -110,7 +110,8 @@
           {% else %}
             VIP {{ virtual_ip | default('not set') }} is NOT assigned to {{ inventory_hostname }}
           {% endif %}
-      when: vip_check is defined
+      when: vip_check is defined and inventory_hostname in groups['haproxy']
+
 
 
 
