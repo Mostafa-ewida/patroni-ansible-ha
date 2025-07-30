@@ -122,19 +122,19 @@
         msg: "Patroni active: {{ patroni_status.status.ActiveState }}"
       when: patroni_status is defined
 
-    - name: Check PostgreSQL API
-      uri:
-        url: http://{{ ansible_default_ipv4.address }}:8008
-        return_content: yes
-      register: patroni_api
+    - name: Check Patronictl list
+      shell: |
+          patronictl -c /etc/patroni.yml list
+      return_content: yes
+      register: patroni_list
       changed_when: false
       ignore_errors: true
       when: "'postgres' in group_names"
 
     - name: Display PostgreSQL state
       debug:
-        msg: "PostgreSQL Reachable: {{ (patroni_api.content | from_json).state }}"
-      when: patroni_api is defined
+        msg: "{{ patroni_api.content }}"
+      when: patroni_list is defined
 
     - name: Check your credentials in /etc/patroni/credentials.yml
       debug:

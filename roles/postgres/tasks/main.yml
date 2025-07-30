@@ -30,11 +30,11 @@
     state: stopped
     enabled: no
 
-- name: Create symlinks for PostgreSQL binaries (wildcard version)
+- name: Create PostgreSQL data directory and set permissions  
   become: yes
   shell: |
-    sudo ln -s /usr/lib/postgresql/{{ pg_version }}/bin/* /usr/bin/
-    sudo mkdir -p {{ patroni_data_dir }} 
+    sudo ln -s /usr/lib/postgresql/{{ pg_version }}/bin/* /usr/bin/ > /dev/null 2>&1 || true
+    sudo mkdir -p {{ patroni_data_dir }} >  /dev/null 2>&1 || true
     sudo chown postgres:postgres {{ patroni_data_dir }}
     sudo chmod 700 {{ patroni_data_dir }}
     
@@ -59,6 +59,7 @@
     owner: root
     group: root
     mode: '0600'
+    delegate_to: localhost
   # when: patroni_super_user_pass is not defined or patroni_repl_user_pass is not defined
 
 
