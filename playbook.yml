@@ -98,17 +98,6 @@
         var: haproxy_status.status
       when: haproxy_status is defined
 
-    - name: Check for VIP
-      command: ip a show {{ vip_interface | default('eth0') }}
-      register: vip_check
-      changed_when: false
-      ignore_errors: true
-      when: "'haproxy' in group_names"
-
-    - name: Display VIP status
-      debug:
-        msg: "{{ 'VIP is assigned' if (virtual_ip | default('') in vip_check.stdout | default('')) else 'VIP not assigned (may be normal for backup node)' }}"
-      when: vip_check is defined
 
     - name: Get Patroni service status
       systemd:
@@ -120,19 +109,20 @@
     - name: Display Patroni service state
       debug:
         msg: "Patroni active: {{ patroni_status.status.ActiveState }}"
-      when: patroni_status is defined
+      when: inventory_hostname in groups['postgres']
+
 
     - name: Check Patronictl list
       command: patronictl -c /etc/patroni.yml list
       register: patroni_list
       changed_when: false
       ignore_errors: true
-      when: "'postgres' in group_names"
+      when: inventory_hostname in groups['postgres']
 
     - name: Display PostgreSQL state
       debug:
         msg: "{{ patroni_list.stdout_lines if patroni_list is defined else 'No Patroni list available' }}"
-      when: patroni_list is defined
+      when: inventory_hostname in groups['postgres'] [0]
 
     - name: Check your credentials in /etc/patroni/credentials.yml
       debug:

@@ -47,6 +47,7 @@
     patroni_super_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
     patroni_repl_user_pass: "{{ lookup('password', '/dev/null length=16 chars=ascii_letters,digits,hexdigits') }}"
   when: patroni_super_user_pass is not defined or patroni_repl_user_pass is not defined
+  sensitive: true
 
 
 
